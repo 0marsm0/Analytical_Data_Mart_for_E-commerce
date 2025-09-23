@@ -1,0 +1,4 @@
+pandas
+ipykernel
+psycopg2
+SQLAlchemy
