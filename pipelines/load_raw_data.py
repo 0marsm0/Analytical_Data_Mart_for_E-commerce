@@ -14,24 +14,44 @@ def load_raw_data(path, file_list):
 
 def preprocess_data(data_dict):
 
-    date_columns = [
-        "order_purchase_timestamp",
-        "order_approved_at",
-        "order_delivered_carrier_date",
-        "order_delivered_customer_date",
-        "order_estimated_delivery_date",
-    ]
+    data_change_dict = {
+        "olist_order_items_dataset.csv": {
+            "order_item_id": "int",
+            "price": "float",
+            "freight_value": "float",
+        },
+        "olist_order_payments_dataset.csv": {
+            "payment_sequential": "int",
+            "payment_installments": "int",
+            "payment_value": "float",
+        },
+        "olist_orders_dataset.csv": {
+            "order_purchase_timestamp": "datetime",
+            "order_approved_at": "datetime",
+            "order_delivered_carrier_date": "datetime",
+            "order_delivered_customer_date": "datetime",
+            "order_estimated_delivery_date": "datetime",
+        },
+        "olist_products_dataset.csv": {
+            "product_name_lenght": "int",
+            "product_description_lenght": "int",
+            "product_photos_qty": "int",
+            "product_weight_g": "int",
+            "product_length_cm": "int",
+            "product_height_cm": "int",
+            "product_width_cm": "int",
+        },
+    }
 
-    orders_df_name = "olist_orders_dataset.csv"
-
-    if orders_df_name in data_dict:
-        print(f"Processing dates for {orders_df_name}...")
-        for col_name in date_columns:
-            data_dict[orders_df_name][col_name] = pd.to_datetime(
-                data_dict[orders_df_name][col_name]
-            )
-    else:
-        print(f"Warning: DataFrame {orders_df_name} not found.")
+    for key in data_change_dict.keys():
+        for column, value in data_change_dict[key].items():
+            match value:
+                case "int":
+                    data_dict[key][column] = data_dict[key][column].astype("Int64")
+                case "float":
+                    data_dict[key][column] = data_dict[key][column].astype(float)
+                case "datetime":
+                    data_dict[key][column] = pd.to_datetime(data_dict[key][column])
 
     return data_dict
 
@@ -53,5 +73,3 @@ if __name__ == "__main__":
     raw_df_list = load_raw_data(DATA_PATH, CSV_FILES)
 
     clean_df_list = preprocess_data(raw_df_list)
-
-    clean_df_list["olist_orders_dataset.csv"].info()
