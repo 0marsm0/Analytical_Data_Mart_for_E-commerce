@@ -1,5 +1,7 @@
 import pandas as pd
 from pathlib import Path
+import os
+from sqlalchemy import create_engine
 
 
 def load_raw_data(path, file_list):
@@ -56,6 +58,31 @@ def preprocess_data(data_dict):
     return data_dict
 
 
+pd.DataFrame.to_sql()
+
+
+def load_to_postgres(data_dict):
+    user = os.getenv("POSTGRES_USER")
+    password = os.getenv("POSTGRES_PASSWORD")
+    host = os.getenv("POSTGRES_HOST")
+    db = os.getenv("POSTGRES_DB")
+
+    try:
+        engine = create_engine(f"postgresql+psycopg2://{user}:{password}@{host}/{db}")
+
+        for key, value in data_dict.items():
+            value.to_sql(
+                table=key.replace("olist_", "").replace("_dataset.csv"),
+                con=engine,
+                schema="raw_data",
+                if_exists="replace",
+                index=False,
+            )
+
+    except ConnectionError as err:
+        print(f"Failed to connect: {err}")
+
+
 if __name__ == "__main__":
 
     DATA_PATH = Path(__file__).parent.parent / "data/"
@@ -71,5 +98,5 @@ if __name__ == "__main__":
     ]
 
     raw_df_list = load_raw_data(DATA_PATH, CSV_FILES)
-
     clean_df_list = preprocess_data(raw_df_list)
+    load_to_postgres(clean_df_list)
