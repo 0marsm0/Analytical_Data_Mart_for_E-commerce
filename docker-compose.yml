@@ -1,0 +1,9 @@
+services:
+  app:
+    build: ./pipelines
+    container_name: olist_etl_app_cloud
+    restart: on-failure
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env

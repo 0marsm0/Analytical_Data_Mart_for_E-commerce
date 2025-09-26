@@ -1,15 +1,23 @@
 import pandas as pd
 from pathlib import Path
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def load_raw_data(path, file_list):
     data = {}
 
     for file in file_list:
-        df = pd.read_csv(path / file)
-        data[file] = df
+        try:
+            df = pd.read_csv(path / file)
+            data[file] = df
+            print(f"{file} has been successfully added to 'data' dictionary")
+        except Exception as err:
+            print(f"ERROR: Failed to read csv. Reason: {err}")
 
     return data
 
@@ -58,9 +66,6 @@ def preprocess_data(data_dict):
     return data_dict
 
 
-pd.DataFrame.to_sql()
-
-
 def load_to_postgres(data_dict):
     user = os.getenv("POSTGRES_USER")
     password = os.getenv("POSTGRES_PASSWORD")
@@ -70,22 +75,34 @@ def load_to_postgres(data_dict):
     try:
         engine = create_engine(f"postgresql+psycopg2://{user}:{password}@{host}/{db}")
 
-        for key, value in data_dict.items():
-            value.to_sql(
-                table=key.replace("olist_", "").replace("_dataset.csv"),
-                con=engine,
-                schema="raw_data",
-                if_exists="replace",
-                index=False,
-            )
+        with engine.connect() as conn:
+            conn.execute(text("CREATE SCHEMA IF NOT EXISTS raw_data"))
+            conn.commit()
 
-    except ConnectionError as err:
-        print(f"Failed to connect: {err}")
+        for key, value in data_dict.items():
+
+            try:
+                table_name = key.replace("olist_", "").replace("_dataset.csv", "")
+                value.to_sql(
+                    name=table_name,
+                    con=engine,
+                    schema="raw_data",
+                    if_exists="replace",
+                    index=False,
+                )
+                print(
+                    f"Table {table_name} has been successfully added to schema raw_data"
+                )
+            except Exception as err:
+                print(f"ERROR: Failed to load table '{table_name}'. Reason: {err}")
+
+    except SQLAlchemyError as err:
+        print(f"ERROR:Failed to connect to database. Reason: {err}")
 
 
 if __name__ == "__main__":
 
-    DATA_PATH = Path(__file__).parent.parent / "data/"
+    DATA_PATH = Path(__file__).parent / "data/"
 
     CSV_FILES = [
         "olist_products_dataset.csv",
@@ -97,6 +114,6 @@ if __name__ == "__main__":
         "olist_sellers_dataset.csv",
     ]
 
-    raw_df_list = load_raw_data(DATA_PATH, CSV_FILES)
-    clean_df_list = preprocess_data(raw_df_list)
-    load_to_postgres(clean_df_list)
+    raw_df_dict = load_raw_data(DATA_PATH, CSV_FILES)
+    clean_df_dict = preprocess_data(raw_df_dict)
+    load_to_postgres(clean_df_dict)
