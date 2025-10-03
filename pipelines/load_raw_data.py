@@ -110,7 +110,6 @@ if __name__ == "__main__":
         "olist_customers_dataset.csv",
         "olist_order_items_dataset.csv",
         "olist_order_payments_dataset.csv",
-        "olist_geolocation_dataset.csv",
         "olist_sellers_dataset.csv",
     ]
 
