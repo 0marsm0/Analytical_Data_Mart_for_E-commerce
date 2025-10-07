@@ -13,7 +13,7 @@ The final dashboard provides insights into sales trends, customer geography, and
 * **[An interactive version is available here](https://app.powerbi.com/groups/me/reports/58eea2b5-53ee-4497-966b-48f6b31d80de/5da39f28c0041b893b08?experience=power-bi)**
 
 * **[Download the full PDF Report](assets/sales_analysis_in_Brazil.pdf)**
-* **![E-commerce Analytics Dashboard Preview](assets/dashboard_preview.png)**
+* **![E-commerce Analytics Dashboard Preview](assets/sales_analysis_in_Brazil.png)**
 
 ## 🛠️ Tech Stack
 
